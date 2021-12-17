@@ -52,7 +52,7 @@ def save_figures(fig, filename, path='./', mode='vec',
                 i += 1
             fig.savefig('{}_{:d}.png'.format(file, i), dpi=dpi, bbox_inches='tight')
         else:
-            raise ValueError("""supported modes are:\n
+            raise ValueError("""supported modes are:
                             1) 'ext' is exact set of extesion
                             2) 'vec' is vector image in .svg and .eps formats
                             3) 'raster' is raster image in .png format
@@ -76,7 +76,7 @@ def save_figures(fig, filename, path='./', mode='vec',
         elif mode=='html':
             fig.write_html('{}_{:d}.html'.format(file, i))
         else:
-            raise ValueError("""supported modes are:\n
+            raise ValueError("""supported modes are:
                             1) 'ext' is exact set of extesion
                             2) 'vec' is vector image in .svg and .eps formats
                             3) 'raster' is raster image in .png format
