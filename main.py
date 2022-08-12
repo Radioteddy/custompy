@@ -1,7 +1,49 @@
 # %%
 # modules to be used
-import os
-import glob
+import numpy as np
+from itertools import groupby
+import pathlib as pl
+# %%
+def read_to_arrs(filename, *args, **kwargs):
+    """
+    read_to_arrs reads content of file consisting of data 
+    separated by empty lines to list of arrays.
+
+    Returns
+    -------
+    list
+        list of multiple numpy arrays
+    """    
+    arrs =[]
+    with open(filename, 'r') as inpf:
+        for k, g in groupby(inpf, lambda x: x.startswith('\n')):
+            if not k:
+                arrs.append(np.loadtxt(g, *args, **kwargs))
+    return arrs
+    
+def multiarr(filename, *args, **kwargs):
+    """
+    multiarr reads content of file consisting of data 
+    separated by empty lines to 3d array.
+
+    Parameters
+    ----------
+    filename : str or Pathlib.path
+        name of file or its absolute path
+
+    Returns
+    -------
+    numpy.array
+        3d array, axis=0 corresponds to number of empty line separators
+    """    
+    data = np.loadtxt(filename, *args, **kwargs)
+    unique_vals = np.unique(data[:,0])
+    i1 = unique_vals.shape[0]
+    i2 = data.shape[0]//i1
+    i3 = data.shape[1]
+    data = np.reshape(data, (i1, i2, i3))
+    return data
+
 
 def save_figures(fig, filename, path='./', mode='vec', 
                     ext=None, dpi=300, scale=1, backend='Matplotlib'):
@@ -30,51 +72,44 @@ def save_figures(fig, filename, path='./', mode='vec',
     backend : str, optional
         what is the plottling backend of figure, by default 'Matplotlib'
     """
-    path = os.path.abspath(path)    
-    if not os.path.exists(path):
-        os.makedirs(path)
-    file = os.path.join(os.path.abspath(path), filename) 
+    path = pl.Path(path).resolve()    
+    if not path.exists():
+        path.mkdir()
+    # file = path / filename 
+    # print(file)
     i = 0
+    print(sorted(path.glob(f'{filename}_*.*')))
+    while sorted(path.glob(f'{filename}_{i:d}.*')) != []:
+        i += 1
     if backend == 'Matplotlib':    
     # use for saving of matplotlib figures
         if ext:
-            while glob.glob('{}_{:d}.*'.format(file, i)) != []:
-                i += 1
-            fig.savefig('{}_{:d}.{}'.format(file, i, ext), dpi=dpi, bbox_inches='tight')
-            fig.savefig('{}_{:d}.{}'.format(file, i, ext), dpi=dpi, bbox_inches='tight')
+            file_to_save = path / f'{filename}_{i:d}.{ext}'
         elif mode == 'vec':
-            while glob.glob('{}_{:d}.*'.format(file, i)) != []:
-                i += 1
-            fig.savefig('{}_{:d}.eps'.format(file, i), bbox_inches='tight')
-            fig.savefig('{}_{:d}.svg'.format(file, i), bbox_inches='tight')
+                file_to_save = path / f'{filename}_{i:d}.svg'
+                dpi = None
         elif mode == 'raster':
-            while glob.glob('{}_{:d}.*'.format(file, i)) != []:
-                i += 1
-            fig.savefig('{}_{:d}.png'.format(file, i), dpi=dpi, bbox_inches='tight')
+            file_to_save = path / f'{filename}_{i:d}.png'
         else:
             raise ValueError("""supported modes are:
                             1) 'ext' is exact set of extesion
                             2) 'vec' is vector image in .svg and .eps formats
                             3) 'raster' is raster image in .png format
                             """)
-                    
+        fig.savefig(file_to_save, dpi=dpi, bbox_inches='tight')
+    
     elif backend == 'Plotly':    
     # use for saving of Plotly figures
         if ext:
-            while glob.glob('{}_{:d}.*'.format(file, i)) != []:
-                i += 1
-            fig.write_image('{}_{:d}.{}'.format(file, i, ext), scale=scale)
-            fig.write_image('{}_{:d}.{}'.format(file, i, ext), scale=scale)
+            file_to_save = path / f'{filename}_{i:d}.{ext}'
         elif mode == 'vec':
-            while glob.glob('{}_{:d}.*'.format(file, i)) != []:
-                i += 1
-            fig.write_image('{}_{:d}.svg'.format(file, i))
+            file_to_save = path / f'{filename}_{i:d}.svg'
+            scale = None
         elif mode == 'raster':
-            while glob.glob('{}_{:d}.*'.format(file, i)) != []:
-                i += 1
-            fig.write_image('{}_{:d}.png'.format(file, i), scale=scale)
+            file_to_save = path / f'{filename}_{i:d}.png'
         elif mode=='html':
-            fig.write_html('{}_{:d}.html'.format(file, i))
+            file_to_save = path / f'{filename}_{i:d}.html'
+            scale=None
         else:
             raise ValueError("""supported modes are:
                             1) 'ext' is exact set of extesion
@@ -82,6 +117,7 @@ def save_figures(fig, filename, path='./', mode='vec',
                             3) 'raster' is raster image in .png format
                             4) 'html' is interactive image in .html format
                             """)
+        fig.write_image(file_to_save, scale=scale)
     else:
-        raise ValueError("Currently only Matplotlib and Plotly are supported")        
+        raise ValueError("Currently only Matplotlib and Plotly are supported")       
     
