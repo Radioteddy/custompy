@@ -75,10 +75,7 @@ def save_figures(fig, filename, path='./', mode='vec',
     path = pl.Path(path).resolve()    
     if not path.exists():
         path.mkdir()
-    # file = path / filename 
-    # print(file)
     i = 0
-    print(sorted(path.glob(f'{filename}_*.*')))
     while sorted(path.glob(f'{filename}_{i:d}.*')) != []:
         i += 1
     if backend == 'Matplotlib':    
